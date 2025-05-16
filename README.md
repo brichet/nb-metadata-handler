@@ -3,7 +3,6 @@
 [![Github Actions Status](https://github.com/brichet/nb-metadata-handler/workflows/Build/badge.svg)](https://github.com/brichet/nb-metadata-handler/actions/workflows/build.yml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/brichet/nb-metadata-handler/main?urlpath=lab)
 
-
 A JupyterLab extension to handle notebook metadata.
 
 ## Requirements
