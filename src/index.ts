@@ -34,7 +34,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     const cellPasted = (
       notebook: Notebook,
-      pasteCells: Notebook.IPasteCells
+      pasteCells: Notebook.IPastedCells
     ) => {
       let handlers: IMetadataHandler[] = [];
       if (
