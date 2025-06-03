@@ -111,17 +111,16 @@ export class MetadataUpdater {
       if (path.length) {
         item = path.reduce<IDict<JSONValue>>((acc, key) => {
           if (acc[key]) {
+            // If one of the nested subpath was not an object, it will be overwritten.
             if (typeof acc[key] !== 'object') {
               acc[key] = {};
             }
           } else {
-            // If one of the nested subpath was not an object, it will be overwritten.
             acc[key] = {};
           }
-          return { ...(acc[key] as object) } as IDict<JSONValue>;
+          return acc[key] as IDict<JSONValue>;
         }, obj);
       }
-
       if (handler.action === 'add') {
         item[last] = handler.value;
       } else if (handler.action === 'delete') {
