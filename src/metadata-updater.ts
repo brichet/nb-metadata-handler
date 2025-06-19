@@ -94,9 +94,20 @@ export class MetadataUpdater {
 
     const root = path.shift();
     const last = path.pop();
+
     if (!root) {
+      // If root is empty and action is delete, remove the whole metadata.
+      if (handler.action === 'delete') {
+        const sharedModel = model.sharedModel;
+        sharedModel.transact(() =>
+          Object.keys(sharedModel.metadata).forEach(key =>
+            sharedModel.deleteMetadata(key)
+          )
+        );
+      }
       return;
     }
+
     const metadata = model.getMetadata(root);
 
     if (last !== undefined) {
