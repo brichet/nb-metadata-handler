@@ -6,10 +6,18 @@ import { ICellModel } from '@jupyterlab/cells';
 import { CellList, INotebookTracker, Notebook } from '@jupyterlab/notebook';
 import { IObservableList } from '@jupyterlab/observables';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import {
+  ReadonlyPartialJSONArray,
+  ReadonlyPartialJSONObject
+} from '@lumino/coreutils';
 
 import { MetadataUpdater } from './metadata-updater';
 import { MetadataHandlerRegistry } from './registry';
-import { IMetadataHandler, IMetadataHandlerRegistry } from './token';
+import {
+  IMetadataHandler,
+  IMetadataHandlerRegistry,
+  InsertMethod
+} from './token';
 
 /**
  * The plugin that will track the cell insertion in all notebooks, and call the
@@ -95,14 +103,74 @@ const plugin: JupyterFrontEndPlugin<void> = {
       });
     });
 
+    /**
+     * Handle the settings.
+     */
+    let registeredHandlers: IMetadataHandler[] = [];
+    const loadSetting = (setting: ISettingRegistry.ISettings): void => {
+      // Get the handlers from settings
+      const handlers = setting.get('handlers')
+        .composite as ReadonlyPartialJSONArray;
+
+      // Remove previous handlers added by the settings
+      registeredHandlers.forEach(handler => registry.remove(handler));
+      registeredHandlers = [];
+
+      handlers.forEach(handlerSetting => {
+        if (!handlerSetting) {
+          return;
+        }
+        handlerSetting = handlerSetting as ReadonlyPartialJSONObject;
+        let handler: IMetadataHandler | undefined;
+
+        if (handlerSetting['action'] === 'delete') {
+          // Create an handler to delete metadata
+          handler = {
+            action: 'delete',
+            method: handlerSetting['method'] as InsertMethod,
+            path: handlerSetting['path'] as string
+          };
+        } else if (handlerSetting['action'] === 'add') {
+          /**
+           * Create an handler to add metadata
+           * We first try to parse the value. It should work if the value type is of
+           * - number
+           * - boolean
+           * - object
+           * - array
+           * If an error is caught, this means that the value is a string.
+           */
+          let value: any;
+          try {
+            value = JSON.parse(handlerSetting['value'] as string);
+          } catch {
+            value = handlerSetting['value'] as string;
+          }
+
+          handler = {
+            action: 'add',
+            method: handlerSetting['method'] as InsertMethod,
+            path: handlerSetting['path'] as string,
+            value: value
+          };
+        }
+        if (!handler) {
+          return;
+        }
+
+        // Add the handler to the register
+        if (registry.add(handler)) {
+          registeredHandlers.push(handler);
+        }
+      });
+    };
+
     if (settingRegistry) {
       settingRegistry
         .load(plugin.id)
         .then(settings => {
-          console.log(
-            'nb-metadata-handler settings loaded:',
-            settings.composite
-          );
+          loadSetting(settings);
+          settings.changed.connect(loadSetting);
         })
         .catch(reason => {
           console.error(

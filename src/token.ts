@@ -62,7 +62,7 @@ export interface IMetadataHandlerRegistry {
    * Add a new metadata handler.
    * No-op if the same is already registered.
    */
-  add(handler: IMetadataHandler): void;
+  add(handler: IMetadataHandler): boolean;
   /**
    * Remove a metadata handler.
    */
